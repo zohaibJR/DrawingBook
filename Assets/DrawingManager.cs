@@ -36,12 +36,25 @@ public class DrawingManager : MonoBehaviour
     {
         rectTransform = drawingArea.GetComponent<RectTransform>();
 
-        tex = new Texture2D(Screen.width, Screen.height, TextureFormat.RGBA32, false);
+        // Use the texture assigned in the Inspector
+        Texture2D originalTex = drawingArea.texture as Texture2D;
+
+        if (originalTex == null)
+        {
+            Debug.LogError("Assigned drawingArea.texture is not a Texture2D!");
+            return;
+        }
+
+        // Make a copy so we can draw on it without changing the original
+        tex = Instantiate(originalTex);
+        tex.Apply();
+
         drawingArea.texture = tex;
         drawingArea.material = null;
 
-        ClearCanvas();
+        Debug.Log("Drawing initialized with assigned image.");
     }
+
 
     void Update()
     {

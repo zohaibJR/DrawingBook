@@ -7,15 +7,34 @@ public class RefereneImageManager : MonoBehaviour
     void Start()
     {
         Debug.Log("Reference Image Script Started");
-        int selectedLevel = PlayerPrefs.GetInt("SelectedLevel", 1); // 1 to 5
-        ActivateLevel(selectedLevel - 1); // Convert to 0-based index
+
+        string selectedImage = PlayerPrefs.GetString("DrawingImage", " "); // Default is blank
+        Debug.Log("Selected DrawingImage: " + selectedImage);
+
+        if (selectedImage == "Corn")
+        {
+            ActivateImageByIndex(0); // Activate 1st index
+        }
+        else
+        {
+            Debug.LogWarning("No matching DrawingImage found: " + selectedImage);
+            DeactivateAllImages(); // Optional: deactivate all if no match
+        }
     }
 
-    void ActivateLevel(int index)
+    void ActivateImageByIndex(int index)
     {
         for (int i = 0; i < ReferenceImages.Length; i++)
         {
             ReferenceImages[i].SetActive(i == index);
+        }
+    }
+
+    void DeactivateAllImages()
+    {
+        for (int i = 0; i < ReferenceImages.Length; i++)
+        {
+            ReferenceImages[i].SetActive(false);
         }
     }
 }
