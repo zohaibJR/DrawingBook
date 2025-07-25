@@ -1,6 +1,8 @@
-using UnityEngine;
-using UnityEngine.UI;
+using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class DrawingManager : MonoBehaviour
 {
@@ -18,6 +20,9 @@ public class DrawingManager : MonoBehaviour
     private Vector2? lastDrawPos = null;
     private List<Stroke> strokes = new List<Stroke>();
     private Stroke currentStroke;
+
+    private Color savedColor;              // Color before slider drag
+    private bool isAdjustingBrush = false; // Flag to track slider drag state
 
     private void Awake()
     {
@@ -138,17 +143,23 @@ public class DrawingManager : MonoBehaviour
         }
     }
 
+    // Called from color buttons
     public void SetPaintColor(Color newColor)
     {
         currentColor = newColor;
-        isEraser = false; // switch back to brush
+        isEraser = false;
+
+        if (!isAdjustingBrush)
+            savedColor = newColor;
     }
 
+    // Called from eraser button
     public void ToggleEraser()
     {
         isEraser = !isEraser;
     }
 
+    // Called from rollback button
     public void RollbackLastStroke()
     {
         if (strokes.Count > 0)
@@ -158,6 +169,7 @@ public class DrawingManager : MonoBehaviour
         }
     }
 
+    // Redraw everything from strokes list
     void RedrawAllStrokes()
     {
         ClearCanvas();
@@ -173,6 +185,7 @@ public class DrawingManager : MonoBehaviour
         tex.Apply();
     }
 
+    // Clear canvas to white
     void ClearCanvas()
     {
         Color[] fillColor = new Color[tex.width * tex.height];
@@ -182,8 +195,39 @@ public class DrawingManager : MonoBehaviour
         tex.SetPixels(fillColor);
         tex.Apply();
     }
+
+    // Call this when slider drag starts (OnPointerDown or OnValueChanged)
+    public void OnBrushSizeDragStart()
+    {
+        if (!isAdjustingBrush)
+        {
+            savedColor = currentColor;  // Save current color
+            currentColor = Color.white; // Temporarily use white
+            Debug.Log("White Color ");
+            isAdjustingBrush = true;
+        }
+    }
+
+    // Call this when slider drag ends (via EventTrigger EndDrag)
+
+    public void OnBrushSizeDragEnd()
+    {
+        if (isAdjustingBrush)
+        {
+            StartCoroutine(RestoreColorAfterDelay(0.5f)); // Start coroutine
+        }
+    }
+
+    private IEnumerator RestoreColorAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        currentColor = savedColor;  // Restore saved color
+        isAdjustingBrush = false;
+    }
 }
 
+// Stroke class
 public class Stroke
 {
     public List<StrokePoint> points = new List<StrokePoint>();
@@ -197,6 +241,7 @@ public class Stroke
     }
 }
 
+// Stroke point
 public class StrokePoint
 {
     public int x;
